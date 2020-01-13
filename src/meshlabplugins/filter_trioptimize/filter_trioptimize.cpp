@@ -130,6 +130,7 @@ TriOptimizePlugin::TriOptimizePlugin()
 		case FP_NEAR_LAPLACIAN_SMOOTH: 	return tr("Laplacian Smooth (surface preserving)");
 		default:		assert(0);
 	}
+	return {};
 }
 
  int TriOptimizePlugin::getRequirements(QAction *action)
@@ -162,6 +163,7 @@ TriOptimizePlugin::TriOptimizePlugin()
 					   "on original surface");
 		default : assert(0);
 	}
+	return {};
 }
 
  TriOptimizePlugin::FilterClass TriOptimizePlugin::getClass(QAction *action)
@@ -183,12 +185,13 @@ int TriOptimizePlugin::postCondition(QAction *a) const
 		case FP_NEAR_LAPLACIAN_SMOOTH : return MeshModel::MM_VERTCOORD | MeshModel::MM_VERTNORMAL;
 		default                       : assert(0);
 	}
+	return {};
 }
 
 // This function define the needed parameters for each filter.
 // Return true if the filter has some parameters
 // it is called every time, so you can set the default value of parameters according to the mesh
-// For each parmeter you need to define,
+// For each parameter you need to define,
 // - the name of the parameter,
 // - the string shown in the dialog
 // - the default value

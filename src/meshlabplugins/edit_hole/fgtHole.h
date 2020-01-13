@@ -44,7 +44,7 @@
  *
  *  FgtHole uses meshe's additional data to mark interesting face, so surfing 
  *  the hole faces is driven by face-face ajacency and mark meaning.
- *  Additional data are accesible for an hole by parentManager (HoleSetManager)
+ *  Additional data are accessible for an hole by parentManager (HoleSetManager)
  *  which links hole to a mesh.
  *  Characteristic faces for an hole are marked as:
  *    - HoleBorderFace: face which initially (before filling) have 1 or 2 border edge.
@@ -269,10 +269,10 @@ public:
 		switch(mode)
 		{
 		case FgtHole<MESH>::Trivial:
-				vcgHole::template FillHoleEar< TrivialEar >(mesh, *this, local_facePointer);
+				vcgHole::template FillHoleEar< TrivialEar >(mesh, this->p, local_facePointer);
 			break;
 		case FgtHole<MESH>::MinimumWeight:
-				vcgHole::template FillHoleEar< MinimumWeightEar >(mesh, *this, local_facePointer);
+				vcgHole::template FillHoleEar< MinimumWeightEar >(mesh, this->p, local_facePointer);
 			break;
 		case FgtHole<MESH>::SelfIntersection:
 				std::vector<FacePointer * > vfp = local_facePointer;
@@ -294,7 +294,7 @@ public:
         for( ; fpi != SelfIntersectionEar::AdjacencyRing().end(); ++fpi)
 					vfp.push_back( &*fpi );
 
-				vcgHole::template FillHoleEar< SelfIntersectionEar >(mesh, *this, vfp);
+				vcgHole::template FillHoleEar< SelfIntersectionEar >(mesh, this->p, vfp);
 				SelfIntersectionEar::AdjacencyRing().clear();
 			break;
 		}
@@ -407,7 +407,7 @@ private:
 		perimeter = HoleInfo::Perimeter();
 	};
 
-	/*  Walking the hole storing vertexes and finding non manifold one */
+	/*  Walking the hole storing vertices and finding non manifold one */
 	void findNonManifoldness()
 	{
 		assert(!IsFilled());
@@ -457,7 +457,7 @@ private:
 	
 	/* First patch face is the adjacent one to initial Pos ("p" field of Hole::Info)
 	 * Other patch face are found looking adjacent face on each vertex of known patch faces.
-	 * NB: looking adjacent faces to vertexes it can find patches also for non manifold hole.
+	 * NB: looking adjacent faces to vertices it can find patches also for non manifold hole.
 	 */
 	void getPatchFaces(int patchFlag)
 	{
@@ -475,7 +475,7 @@ private:
 			stack.pop_back();
 			patches.push_back(f);
 
-			// visit faces adjacent to f's vertexes
+			// visit faces adjacent to f's vertices
 			for(int v=0; v<3; v++)
 			{
 				pos = PosType(f, v);

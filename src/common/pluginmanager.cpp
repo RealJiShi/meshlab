@@ -42,20 +42,25 @@ PluginManager::PluginManager()
 
 PluginManager::~PluginManager()
 {
-	for (int ii = 0; ii < meshIOPlug.size(); ++ii)
-		delete meshIOPlug[ii];
-	for (int ii = 0; ii < meshFilterPlug.size(); ++ii)
-		delete meshFilterPlug[ii];
-	for (int ii = 0; ii < meshRenderPlug.size(); ++ii)
-		delete meshRenderPlug[ii];
-	for (int ii = 0; ii < meshDecoratePlug.size(); ++ii)
-		delete meshDecoratePlug[ii];
+	meshIOPlug.clear();
+	meshFilterPlug.clear();
+	meshRenderPlug.clear();
+	meshDecoratePlug.clear();
+	for (MeshCommonInterface* plugin : ownerPlug)
+		delete plugin;
+	ownerPlug.clear();
+
 	for (int ii = 0; ii < meshEditInterfacePlug.size(); ++ii)
 		delete meshEditInterfacePlug[ii];
+	meshEditInterfacePlug.clear();
+
 	for (int ii = 0; ii < meshlabXMLFilterPlug.size(); ++ii)
 		delete meshlabXMLFilterPlug[ii];
+	meshlabXMLFilterPlug.clear();
+
 	for (int ii = 0; ii < xmlpluginfo.size(); ++ii)
 		MLXMLPluginInfo::destroyXMLPluginInfo(xmlpluginfo[ii]);
+	xmlpluginfo.clear();
 }
 
 
@@ -130,9 +135,11 @@ void PluginManager::loadPlugins(RichParameterSet& defaultGlobal)
 			if (plugin)
 			{
 				pluginsLoaded.push_back(fileName);
+				MeshCommonInterface *iCommon = nullptr;
 				MeshFilterInterface *iFilter = qobject_cast<MeshFilterInterface *>(plugin);
 				if (iFilter)
 				{
+					iCommon = iFilter;
 					meshFilterPlug.push_back(iFilter);
 					foreach(QAction *filterAction, iFilter->actions())
 					{
@@ -155,6 +162,7 @@ void PluginManager::loadPlugins(RichParameterSet& defaultGlobal)
 				MeshIOInterface *iIO = qobject_cast<MeshIOInterface *>(plugin);
 				if (iIO)
 				{
+					iCommon = iIO;
 					meshIOPlug.push_back(iIO);
 					iIO->initGlobalParameterSet(NULL, defaultGlobal);
 				}
@@ -162,6 +170,7 @@ void PluginManager::loadPlugins(RichParameterSet& defaultGlobal)
 				MeshDecorateInterface *iDecorator = qobject_cast<MeshDecorateInterface *>(plugin);
 				if (iDecorator)
 				{
+					iCommon = iDecorator;
 					meshDecoratePlug.push_back(iDecorator);
 					foreach(QAction *decoratorAction, iDecorator->actions())
 					{
@@ -172,7 +181,10 @@ void PluginManager::loadPlugins(RichParameterSet& defaultGlobal)
 
 				MeshRenderInterface *iRender = qobject_cast<MeshRenderInterface *>(plugin);
 				if (iRender)
+				{
+					iCommon = iRender;
 					meshRenderPlug.push_back(iRender);
+				}
 
 				MeshEditInterfaceFactory *iEditFactory = qobject_cast<MeshEditInterfaceFactory *>(plugin);
 				if (iEditFactory)
@@ -180,6 +192,12 @@ void PluginManager::loadPlugins(RichParameterSet& defaultGlobal)
 					meshEditInterfacePlug.push_back(iEditFactory);
 					foreach(QAction* editAction, iEditFactory->actions())
 						editActionList.push_back(editAction);
+				}
+				else if (iCommon)
+				{
+					ownerPlug.push_back(iCommon);
+				} else {
+					// qDebug("Plugin %s was loaded, but could not be casted to any known type.", qUtf8Printable(fileName));
 				}
 			}
 			else
@@ -190,7 +208,7 @@ void PluginManager::loadPlugins(RichParameterSet& defaultGlobal)
 }
 
 // Search among all the decorator plugins the one that contains a decoration with the given name
-MeshDecorateInterface *PluginManager::getDecoratorInterfaceByName(QString name)
+MeshDecorateInterface *PluginManager::getDecoratorInterfaceByName(const QString& name)
 {
   foreach(MeshDecorateInterface *tt, this->meshDecoratePlugins())
   {
@@ -254,11 +272,43 @@ QString PluginManager::getBaseDirPath()
 QString PluginManager::getDefaultPluginDirPath()
 {
 	QDir pluginsDir(getBaseDirPath());
-	if (!pluginsDir.exists("plugins"))
-		//QMessageBox::warning(0,"Meshlab Initialization","Serious error. Unable to find the plugins directory.");
-		qDebug("Meshlab Initialization: Serious error. Unable to find the plugins directory.");
-	pluginsDir.cd("plugins");
-	return pluginsDir.absolutePath();
+#if defined(Q_OS_WIN)
+	QString d = pluginsDir.dirName();
+	QString dLower = d.toLower();
+	if (dLower == "release" || dLower == "relwithdebinfo" || dLower == "debug" ||
+		dLower == "minsizerel") {
+		// This is a configuration directory for MS Visual Studio.
+		pluginsDir.cdUp();
+	} else {
+		d.clear();
+	}
+#endif
+	if (pluginsDir.exists("plugins")) {
+		pluginsDir.cd("plugins");
+
+#if defined(Q_OS_WIN)
+		// Re-apply the configuration dir, if any.
+		if (!d.isEmpty() && pluginsDir.exists(d)) {
+			pluginsDir.cd(d);
+		}
+#endif
+
+		return pluginsDir.absolutePath();
+	}
+#if !defined(Q_OS_MAC) && !defined(Q_OS_WIN)
+	if (pluginsDir.dirName() == "bin") {
+		pluginsDir.cdUp();
+		pluginsDir.cd("lib");
+		pluginsDir.cd("meshlab");
+		if (pluginsDir.exists("plugins")) {
+			pluginsDir.cd("plugins");
+			return pluginsDir.absolutePath();
+		}
+	}
+#endif
+	//QMessageBox::warning(0,"Meshlab Initialization","Serious error. Unable to find the plugins directory.");
+	qDebug("Meshlab Initialization: Serious error. Unable to find the plugins directory.");
+	return {};
 }
 
 

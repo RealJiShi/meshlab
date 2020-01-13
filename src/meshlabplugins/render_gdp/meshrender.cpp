@@ -40,7 +40,16 @@ void MeshShaderRenderPlugin::initActionList() {
 
 	QDir shadersDir = QDir(qApp->applicationDirPath());
 #if defined(Q_OS_WIN)
-	if (shadersDir.dirName() == "debug" || shadersDir.dirName() == "release" || shadersDir.dirName() == "plugins")
+	QString d = shadersDir.dirName();
+	QString dLower = d.toLower();
+	if (dLower == "release" || dLower == "relwithdebinfo" || dLower == "debug" ||
+		dLower == "minsizerel") {
+		// This is a configuration directory for MS Visual Studio.
+		shadersDir.cdUp();
+	}
+	d = shadersDir.dirName();
+	if (shadersDir.dirName() == "plugins")
+
 		shadersDir.cdUp();
 #elif defined(Q_OS_MAC)
 	//	if (shadersDir.dirName() == "MacOS") {
@@ -51,6 +60,15 @@ void MeshShaderRenderPlugin::initActionList() {
 	//	}
 #endif
 	bool ret = shadersDir.cd("shaders");
+
+#if !defined(Q_OS_MAC) && !defined(Q_OS_WIN)
+	if (! ret) {
+		shadersDir = QDir(qApp->applicationDirPath());
+		if (shadersDir.dirName() == "bin") {
+			ret = shadersDir.cdUp() && shadersDir.cd("share")&& shadersDir.cd("meshlab") && shadersDir.cd("shaders");
+		}
+	}
+#endif
 	if (!ret)
 	{
 		QMessageBox::information(0, "MeshLab",

@@ -64,7 +64,7 @@ public:
 
     QMap<QString,RichParameterSet> generateFilterParameterMap();
 
-    MeshDecorateInterface* getDecoratorInterfaceByName(QString name);
+    MeshDecorateInterface* getDecoratorInterfaceByName(const QString& name);
 
     QDir pluginsDir;
     QMap<QString, QAction*> actionFilterMap;
@@ -89,6 +89,8 @@ public:
     QVector<MeshLabFilterInterface*> meshlabXMLFilterPlug;
     QVector<QAction *> editActionList;
     QVector<QAction *> decoratorActionList;
+    // Used for unique destruction - this "owns" all IO, Filter, Render, and Decorate plugins
+    QVector<MeshCommonInterface *> ownerPlug;
 
     QStringList pluginsLoaded;
 

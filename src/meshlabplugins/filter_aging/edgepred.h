@@ -53,7 +53,7 @@ class QualityEdgePred
 			return (lenp(ep) && testQuality(ep));
 		}
 		
-		// Tests quality predicate but only on the first of the two vertexes of the edge
+		// Tests quality predicate but only on the first of the two vertices of the edge
 		bool qVertTest(face::Pos<CMeshO::FaceType> ep) const {
 			return (ep.f->V(ep.z)->Q() > qthVal);
 		}
@@ -119,14 +119,14 @@ class AngleEdgePred
 				seAngle = math::ToDeg(vcg::Angle(edge ^ ep.f->FFp(ep.z)->N(), ep.f->N()));
 			}
 
-			/*  There are always 2 cases wich produce the same angle value:
+			/*  There are always 2 cases which produce the same angle value:
 								 ___|_		    ____
 								|			   |  |
 							   -|			   |-
 				
 				In the first case the edge lies in a concave area of the mesh
 				while in the second case it lies in a convex area.
-				We need a way to know wich is the current case.
+				We need a way to know which is the current case.
 				This is done comparing seAngle with thVal.
 			*/
 			return (ffangle-athVal >= -0.001  && seAngle-athVal <= 0.001);

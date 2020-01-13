@@ -76,8 +76,8 @@ QString FilterLayerPlugin::filterName(FilterIDType filterId) const
     case FP_RENAME_RASTER :  return QString("Rename Current Raster");
     case FP_SELECTCURRENT :  return QString("Change the current layer");
     case FP_MESH_VISIBILITY :  return QString("Change Visibility of layer(s)");
-	case FP_EXPORT_CAMERAS:  return QString("Export active rasters cameras to file");
-	case FP_IMPORT_CAMERAS:  return QString("Import cameras for active rasters from file");
+    case FP_EXPORT_CAMERAS:  return QString("Export active rasters cameras to file");
+    case FP_IMPORT_CAMERAS:  return QString("Import cameras for active rasters from file");
     default : assert(0);
     }
 	return NULL;
@@ -87,8 +87,8 @@ QString FilterLayerPlugin::filterName(FilterIDType filterId) const
 QString FilterLayerPlugin::filterInfo(FilterIDType filterId) const
 {
     switch(filterId) {
-    case FP_SPLITSELECTEDFACES :  return QString("Selected faces are moved (or duplicated) in a new layer. Warning! per-vertex and per-face user defined attributes will not be transfered.");
-    case FP_SPLITSELECTEDVERTICES :  return QString("Selected vertices are moved (or duplicated) in a new layer. Warning! per-vertex user defined attributes will not be transfered.");
+    case FP_SPLITSELECTEDFACES :  return QString("Selected faces are moved (or duplicated) in a new layer. Warning! per-vertex and per-face user defined attributes will not be transferred.");
+    case FP_SPLITSELECTEDVERTICES :  return QString("Selected vertices are moved (or duplicated) in a new layer. Warning! per-vertex user defined attributes will not be transferred.");
     case FP_DELETE_MESH :  return QString("The current mesh layer is deleted");
     case FP_DELETE_NON_VISIBLE_MESH :  return QString("All the non visible mesh layers are deleted");
     case FP_DELETE_RASTER :  return QString("The current raster layer is deleted");
@@ -100,8 +100,8 @@ QString FilterLayerPlugin::filterInfo(FilterIDType filterId) const
     case FP_RENAME_RASTER :  return QString("Explicitly change the label shown for a given raster");
     case FP_SELECTCURRENT :  return QString("Change the current layer to a chosen one");
     case FP_MESH_VISIBILITY :  return QString("Make layer(s) visible/invisible. Useful for scripting.");
-	case FP_EXPORT_CAMERAS:  return QString("Export active cameras to file, in the .out or Agisoft .xml formats");
-	case FP_IMPORT_CAMERAS:  return QString("Import cameras for active rasters from .out or Agisoft .xml formats");
+    case FP_EXPORT_CAMERAS:  return QString("Export active cameras to file, in the .out or Agisoft .xml formats");
+    case FP_IMPORT_CAMERAS:  return QString("Import cameras for active rasters from .out or Agisoft .xml formats");
     default : assert(0);
     }
 	return NULL;
@@ -126,7 +126,7 @@ void FilterLayerPlugin::initParameterSet(QAction *action, MeshDocument &md, Rich
         break;
     case FP_FLATTEN :
         parlst.addParam(new RichBool ("MergeVisible", true, "Merge Only Visible Layers",
-            "If true, flatten only visible layers, othwerwise, all layers are used"));
+            "If true, flatten only visible layers, otherwise, all layers are used"));
         parlst.addParam(new RichBool ("DeleteLayer", true, "Delete Layers ",
             "Delete all the layers used as source in flattening. <br>If all layers are visible only a single layer will remain after the invocation of this filter"));
         parlst.addParam(new RichBool ("MergeVertices", true,  "Merge duplicate vertices",
@@ -144,7 +144,7 @@ void FilterLayerPlugin::initParameterSet(QAction *action, MeshDocument &md, Rich
         break;
     case FP_RENAME_RASTER :
         parlst.addParam(new RichString ("newName",
-            rm->label(),
+            rm?rm->label():"",
             "New Label",
             "New Label for the raster"));
         break;
@@ -182,7 +182,19 @@ bool FilterLayerPlugin::applyFilter(QAction *filter, MeshDocument &md, RichParam
  {
 	case  FP_RENAME_MESH:     md.mm()->setLabel(par.getString("newName")); break;
 
-	case  FP_RENAME_RASTER:   md.rm()->setLabel(par.getString("newName")); break;
+	case  FP_RENAME_RASTER:
+	{
+    if (md.rm()) 
+    {
+      md.rm()->setLabel(par.getString("newName"));
+    }
+    else
+    {
+      this->errorMessage = "Error: Call to Rename Current Raster with no valid raster.";
+      return false;
+    }
+    
+	} break;
 
 	case  FP_SELECTCURRENT:   md.setCurrent(par.getMesh("layer")); break;
 
@@ -613,7 +625,7 @@ bool FilterLayerPlugin::applyFilter(QAction *filter, MeshDocument &md, RichParam
 			sscanf(line, "%d %d", &num_cams, &num_points);
 			
 			///// Check if the number of active rasters and cameras is the same
-			int active = 0;
+			unsigned active = 0;
 			for (int i = 0; i < md.rasterList.size(); i++)
 			{
 				if (md.rasterList[i]->visible)
@@ -622,8 +634,7 @@ bool FilterLayerPlugin::applyFilter(QAction *filter, MeshDocument &md, RichParam
 
 			if (active != num_cams)
 			{
-				this->errorMessage = "Error!";
-				errorMessage = "Wait! The number of active rasters and the number of cams in the Bundler file is not the same!";
+				this->errorMessage = "Wait! The number of active rasters and the number of cams in the Bundler file is not the same!";
 				return false;
 			}
 

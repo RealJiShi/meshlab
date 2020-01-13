@@ -205,14 +205,14 @@ public:
 		original = c; // setText("Single Vertex Color Change");
 	}
 
-	virtual void undo()
+	virtual void undo() override
 	{ 
 		vcg::Color4b temp = vertex->C(); 
 		vertex->C() = original; 
 		original = temp; 
 	}
-	virtual void redo() { undo(); }
-	virtual int id() { return COLOR_PAINT; }
+	virtual void redo() override { undo(); }
+	virtual int id() const override { return COLOR_PAINT; }
 
 private:
 	CVertexO* vertex;
@@ -229,12 +229,12 @@ public:
 		vertex = v; original = p; normal = n;
 	}
 
-	virtual void undo() {
+	virtual void undo() override {
 		Point3m temp = vertex->P(); vertex->P() = original; original = temp;
 		temp = vertex->N(); vertex->N() = normal; normal = temp;
 	}
-	virtual void redo() { undo(); }
-	virtual int id() { return MESH_PULL; }
+	virtual void redo() override { undo(); }
+	virtual int id() const override { return MESH_PULL; }
 
 private:
 	CVertexO* vertex;
@@ -255,9 +255,9 @@ public:
 		face = f; original = sel; // setText("Single Vertex Color Change");
 	}
 
-	virtual void undo() { bool temp = face->IsS(); original ? face->SetS() : face->ClearS(); original = temp; }
-	virtual void redo() { undo(); }
-	virtual int id() { return MESH_SELECT; }
+	virtual void undo() override { bool temp = face->IsS(); original ? face->SetS() : face->ClearS(); original = temp; }
+	virtual void redo() override { undo(); }
+	virtual int id() const override { return MESH_SELECT; }
 private:
 	CFaceO * face;
 	bool original;
@@ -332,16 +332,17 @@ inline void fastMultiply(float x, float y, float z, double matrix[], double *xr,
  */
 inline int getNearest(QPointF center, QPointF *points, int num)
 {
+	using std::abs;
 	int index = 0;
 
-	float dist = fabsf(center.x() - points[0].x())*fabsf(center.x() - points[0].x()) + fabsf(center.y() - points[0].y())*fabsf(center.y() - points[0].y());
+	float dist = abs(center.x() - points[0].x())*abs(center.x() - points[0].x()) + abs(center.y() - points[0].y())*abs(center.y() - points[0].y());
 
 	float temp = 0;
 
 	for (int i = 1; i < num; i++)
 	{
-		temp = fabsf(center.x() - points[i].x())*fabsf(center.x() - points[i].x()) +
-			fabsf(center.y() - points[i].y())*fabsf(center.y() - points[i].y());
+		temp = abs(center.x() - points[i].x())*abs(center.x() - points[i].x()) +
+			abs(center.y() - points[i].y())*abs(center.y() - points[i].y());
 
 		if (temp < dist) {
 			index = i;

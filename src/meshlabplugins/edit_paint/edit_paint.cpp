@@ -592,7 +592,7 @@ inline void EditPaintPlugin::smooth(vector< pair<CVertexO *, PickingData> > * ve
 		CFaceO * f = one_face;
 
 		do
-		{ /// calc the sum of the surrounding vertexes pos or and vertexes color
+		{ /// calc the sum of the surrounding vertices pos or and vertices color
 			CFaceO * temp = one_face->VFp(pos); //next face in VF list
 			if (one_face != 0 && !one_face->IsD())
 			{
@@ -1331,7 +1331,7 @@ void drawPercentualPolyLine(GLArea * gla, QPoint &mid, MeshModel &m, GLfloat* pi
 		double pix_y = b2;
 		double pix_z = c2;
 
-		/** to search with quicksearch the nearset zbuffer value in the line */
+		/** to search with quicksearch the nearest zbuffer value in the line */
 		for (int k = 0; k < STEPS; k++)
 		{
 			double inv_yy = gla->height() - pix_y;
@@ -1342,7 +1342,7 @@ void drawPercentualPolyLine(GLArea * gla, QPoint &mid, MeshModel &m, GLfloat* pi
 			da = da / 2.0;
 			db = db / 2.0;
 			dc = dc / 2.0;
-			if (fabsf(zz - pix_z) < 0.001)
+			if (std::abs(zz - pix_z) < 0.001)
 			{
 				proj_points[i] = QPointF(pix_x, inv_yy);
 				break;

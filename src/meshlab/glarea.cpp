@@ -100,7 +100,8 @@ GLArea::GLArea(QWidget *parent, MultiViewer_Container *mvcont, RichParameterSet 
     //connect(this->md(), SIGNAL(meshDocumentModified()), this, SLOT(updateAllPerMeshDecorators()),Qt::QueuedConnection);
     connect(this->md(), SIGNAL(meshSetChanged()), this, SLOT(updateMeshSetVisibilities()));
     connect(this->md(), SIGNAL(rasterSetChanged()), this, SLOT(updateRasterSetVisibilities()));
-    connect(this->md(),SIGNAL(documentUpdated()),this,SLOT(completeUpdateRequested()));
+    connect(this->md(), SIGNAL(documentUpdated()),this,SLOT(completeUpdateRequested()));
+	connect(this->md(), SIGNAL(updateDecorators(int)),this,SLOT(updatePerMeshDecorators(int)));
     connect(this, SIGNAL(updateLayerTable()), this->mw(), SIGNAL(updateLayerTable()));
     connect(md(),SIGNAL(meshRemoved(int)),this,SLOT(meshRemoved(int)));
 
@@ -149,21 +150,6 @@ QString GLArea::GetMeshInfoString()
     if(mm()->hasDataMask(MeshModel::MM_POLYGONAL) )   {info.append("MP ");}
 
     return info;
-}
-
-
-void GLArea::Logf(int Level, const char * f, ... )
-{
-	makeCurrent();
-    if(this->md()==0) return;
-
-    char buf[4096];
-    va_list marker;
-    va_start( marker, f );
-
-    vsprintf(buf,f,marker);
-    va_end( marker );
-    this->md()->Log.Log(Level,buf);
 }
 
 QSize GLArea::minimumSizeHint() const {return QSize(400,300);}
@@ -579,6 +565,13 @@ void GLArea::paintEvent(QPaintEvent* /*event*/)
 
     if(trackBallVisible && !takeSnapTile && !(iEdit && !suspendedEditor))
         trackball.DrawPostApply();
+
+	foreach(QAction * p, iPerDocDecoratorlist)
+	{
+		MeshDecorateInterface * decorInterface = qobject_cast<MeshDecorateInterface *>(p->parent());
+		decorInterface->decorateDoc(p, *this->md(), this->glas.currentGlobalParamSet, this, &painter, md()->Log);
+	}
+
     // The picking of the surface position has to be done in object space,
     // so after trackball transformation (and before the matrix associated to each mesh);
     if(hasToPick && hasToGetPickPos)
@@ -600,11 +593,7 @@ void GLArea::paintEvent(QPaintEvent* /*event*/)
 		hasToGetPickCoords = false;
 	}
 
-    foreach(QAction * p , iPerDocDecoratorlist)
-    {
-        MeshDecorateInterface * decorInterface = qobject_cast<MeshDecorateInterface *>(p->parent());
-        decorInterface->decorateDoc(p,*this->md(),this->glas.currentGlobalParamSet, this,&painter,md()->Log);
-    }
+    
 
     // we want to write scene-space the point picked with double-click in the log
     // we have to do it now, before leaving this transformation space
@@ -2240,7 +2229,7 @@ void GLArea::loadShot(const QPair<Shotm,float> &shotAndScale){
     //Point3f tra = trackball.track.tra;
     //
     //// Apply this formula:
-    //// SR(t+p) -v = k[S'R'(t'+p) -v] forall p, R=R', k is a costant
+    //// SR(t+p) -v = k[S'R'(t'+p) -v] forall p, R=R', k is a constant
     //// SR(t) -v = k[S'R(t') -v]
     //// t' = 1/k* S'^-1St + (k-1)/k S'^-1*R^-1v
     //Matrix44f s0 = Matrix44f().SetScale(trackball.track.sca,trackball.track.sca, trackball.track.sca);

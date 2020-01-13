@@ -1,0 +1,58 @@
+name: CompileUbuntu
+
+on:
+  [push, pull_request]
+
+jobs:
+  ubuntu_build:
+    name: Build MeshLab (Ubuntu)
+    runs-on: ubuntu-16.04 #in order to deploy, need to use oldest supported version
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Installing dependencies
+      run: |
+       sudo apt install -y qt5-default qttools5-dev-tools qtscript5-dev libqt5xmlpatterns5-dev mesa-common-dev libglu1-mesa-dev lib3ds-dev libglew-dev libeigen3-dev libopenctm-dev libgmp-dev libqhull-dev
+       cd ..
+       git clone --depth=1 --branch=devel https://github.com/cnr-isti-vclab/vcglib.git
+    - name: Compiling external
+      run: |
+        cd src/external
+        qmake external.pro
+        make -j4
+    - name: Compiling MeshLab
+      run: |
+        cd src/
+        qmake meshlab_full.pro
+        make -j4
+    - name: Creating Meshlab Portable ZIP
+      run : |
+        cd src/install/linux
+        ./linux_install.sh
+    - name: Uploading Meshlab Portable
+      uses: actions/upload-artifact@v1
+      with:
+        name: meshlab_portable_linux
+        path: src/distrib/
+         
+
+  ubuntu_build_cmake:
+    name: Build MeshLab (Ubuntu - CMake)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Installing dependencies
+      run: |
+       sudo apt update
+       sudo apt install -y qt5-default qtscript5-dev libqt5xmlpatterns5-dev mesa-common-dev libglu1-mesa-dev lib3ds-dev libglew-dev libeigen3-dev libopenctm-dev libgmp-dev libqhull-dev cmake ninja-build 
+       cd ..
+       git clone --depth=1 --branch=devel https://github.com/cnr-isti-vclab/vcglib.git
+    - name: Configuring
+      run: |
+        mkdir -p src/build
+        cd src/build
+        cmake .. -G Ninja
+    - name: Compiling meshlab
+      run: ninja -C src/build
+

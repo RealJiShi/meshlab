@@ -1251,7 +1251,7 @@ void RenderArea::SelectVertexes()
 
 void RenderArea::CheckVertex()
 {
-    // Search for unselected vertexes in UV Space
+    // Search for unselected vertices in UV Space
     banList.clear();
     CMeshO::FaceIterator fi;
     for(fi = model->cm.face.begin(); fi != model->cm.face.end(); ++fi)
@@ -1373,7 +1373,7 @@ void RenderArea::SelectConnectedComponent(QPoint e)
     }
 }
 
-// Clear every selected faces or vertexes
+// Clear every selected faces or vertices
 void RenderArea::ClearSelection()
 {
     //selBit = CFaceO::NewBitFlag();
@@ -1444,10 +1444,10 @@ void RenderArea::Flip(bool mode)
     }
 }
 
-// Collapse a couple of vertexes
+// Collapse a couple of vertices
 void RenderArea::UnifyCouple()
 {
-    // Calculate the average coordinates and unify a couple of vertexes
+    // Calculate the average coordinates and unify a couple of vertices
     if (VCount == 2)
     {
         float tu = (vc1.u() + vc2.u())/2.0;
@@ -1474,10 +1474,10 @@ void RenderArea::UnifyCouple()
     }
 }
 
-// Unify a set of border vertexes among the selected path
+// Unify a set of border vertices among the selected path
 void RenderArea::UnifySet()
 {
-    // Unify a set of vertexes
+    // Unify a set of vertices
     if (path.size() == path1.size() && drawP && drawP1)
     {
         for (unsigned i = 0; i < path.size(); i++)
@@ -1493,9 +1493,9 @@ void RenderArea::UnifySet()
                     next->WT(n).u() = mu;
                     next->WT(n).v() = mv;
                 }
-                CFaceO* previus = next;
+                CFaceO* previous = next;
                 next = next->VFp(n);
-                n = previus->VFi(n);
+                n = previous->VFi(n);
                 if (next == 0) break;
             }
             int n1 = path1[i]->VFi();
@@ -1592,7 +1592,7 @@ vector<CVertexO*> RenderArea::FindPath(CVertexO* begin, CVertexO* end, CFaceO* f
                     CVertexO *tmp2 = p->V((j+1)%3);
                     bool added = false;
                     int n, oldn;
-                    CFaceO *next, *previus;
+                    CFaceO *next, *previous;
                     float tu, tv;
                     if (tmp1 == path[path.size()-1] && ((verso && p->WT(j).u() >= oldu) || (!verso && p->WT(j).u() <= oldu)))
                     {
@@ -1602,7 +1602,7 @@ vector<CVertexO*> RenderArea::FindPath(CVertexO* begin, CVertexO* end, CFaceO* f
                         else drawnPath1.push_back(Point2f(p->WT((j+1)%3).u(),p->WT((j+1)%3).v()));
                         if (tmp2 == end) {finish = true; break;}
                         n = tmp2->VFi(), oldn = (j+1)%3;
-                        next = tmp2->VFp(), previus = p;
+                        next = tmp2->VFp(), previous = p;
                         added = true;
                         lastadd = index; lastex = j;
                     }
@@ -1614,7 +1614,7 @@ vector<CVertexO*> RenderArea::FindPath(CVertexO* begin, CVertexO* end, CFaceO* f
                         else drawnPath1.push_back(Point2f(p->WT(j).u(),p->WT(j).v()));
                         if (tmp1 == end) {finish = true; break;}
                         n = tmp1->VFi(), oldn = j;
-                        next = tmp1->VFp(), previus = p;
+                        next = tmp1->VFp(), previous = p;
                         added = true;
                         lastadd = index; lastex = j;
                     }
@@ -1626,10 +1626,10 @@ vector<CVertexO*> RenderArea::FindPath(CVertexO* begin, CVertexO* end, CFaceO* f
                         {
                             if (tu == next->WT(n).u() && tv == next->WT(n).v() && next != p && !next->IsV())
                                 Q.push_back(next);
-                            previus = next;
+                            previous = next;
                             oldn = n;
                             next = next->VFp(n);
-                            n = previus->VFi(n);
+                            n = previous->VFi(n);
                             if (next == 0) break;
                         }
                         break;
@@ -1662,7 +1662,7 @@ vector<CVertexO*> RenderArea::FindPath(CVertexO* begin, CVertexO* end, CFaceO* f
 
 void RenderArea::HandleScale(QPoint e)
 {
-    // Move the rectangle of scaling and resize the selction area
+    // Move the rectangle of scaling and resize the selection area
     int tx = rectX - tpanX + e.x();
     int ty = rectY - tpanY + e.y();
     switch(highlighted)
@@ -1802,7 +1802,7 @@ void RenderArea::UpdateSelectionArea(int x, int y)
 
 void RenderArea::UpdateSelectionAreaV(int x, int y)
 {
-    // Update the buttons of the selection area for vertexes
+    // Update the buttons of the selection area for vertices
     selection.moveCenter(QPoint(selection.center().x() + x, selection.center().y() + y));
     selRect[0].moveBottomRight(selection.topLeft());
     selRect[1].moveBottomLeft(selection.topRight());
@@ -1812,7 +1812,7 @@ void RenderArea::UpdateSelectionAreaV(int x, int y)
 
 void RenderArea::UpdateVertexSelection()
 {
-    // Recalcultate the rectangle for selection of vertexes
+    // Recalculate the rectangle for selection of vertices
     selStart = QPoint(MAX,MAX);
     selEnd = QPoint(-MAX,-MAX);
     selectedV = false;
@@ -1893,7 +1893,7 @@ void RenderArea::DrawCircle(QPoint origin)
 
 void RenderArea::UpdateBoundingArea(QPoint topLeft, QPoint topRight)
 {
-    // Update the bounding box (selection rectangle) of the selected faces/vertexes
+    // Update the bounding box (selection rectangle) of the selected faces/vertices
     if (topLeft.x() < selStart.x()) selStart.setX(topLeft.x());
     if (topLeft.y() < selStart.y()) selStart.setY(topLeft.y());
     if (topRight.x() > selEnd.x()) selEnd.setX(topRight.x());
@@ -1932,7 +1932,7 @@ void RenderArea::ImportSelection()
 
 void RenderArea::CountVertexes()
 {
-    // Count the number of selected UV vertexes (not so easy...)
+    // Count the number of selected UV vertices (not so easy...)
     VCount = 0;
     collapse1 = 0;
     collapse2 = 0;

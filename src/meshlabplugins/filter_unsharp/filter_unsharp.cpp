@@ -107,15 +107,15 @@ QString FilterUnsharp::filterInfo(FilterIDType filterId) const
   case FP_LAPLACIAN_SMOOTH :          return tr("Laplacian smooth of the mesh: for each vertex it calculates the average position with nearest vertex");
   case FP_HC_LAPLACIAN_SMOOTH :       return tr("HC Laplacian Smoothing, extended version of Laplacian Smoothing, based on the paper of Vollmer, Mencl, and Muller");
   case FP_SD_LAPLACIAN_SMOOTH :       return tr("Scale Dependent Laplacian Smoothing, extended version of Laplacian Smoothing, based on the Fujiwara extended umbrella operator");
-  case FP_TWO_STEP_SMOOTH :           return tr("Two Step Smoothing, a feature preserving/enhancing fairing filter. It is based on a Normal Smoothing step where similar normals are averaged together and a step where the vertexes are fitted on the new normals. Based on: <br>"
+  case FP_TWO_STEP_SMOOTH :           return tr("Two Step Smoothing, a feature preserving/enhancing fairing filter. It is based on a Normal Smoothing step where similar normals are averaged together and a step where the vertices are fitted on the new normals. Based on: <br>"
                                                 "<i>A. Belyaev and Y. Ohtake</i>, <b>A Comparison of Mesh Smoothing Methods</b>, Proc. Israel-Korea Bi-National Conf. Geometric Modeling and Computer Graphics, pp. 83-87, 2003.");
   case FP_TAUBIN_SMOOTH :             return tr("The &lambda;-&mu; Taubin smoothing, it make two steps of smoothing, forth and back, for each iteration. Based on:<br>"
                                                 "Gabriel Taubin,<br><b>A signal processing approach to fair surface design</b><br>Siggraph 1995" );
   case FP_DEPTH_SMOOTH :              return tr("A laplacian smooth that is constrained to move vertices only along the view direction.");
   case FP_DIRECTIONAL_PRESERVATION :  return tr("Store and Blend the current geometry with the result of another previous smoothing processing step. It is useful to limit the influence of any smoothing algorithm along the viewing direction. This is import to cope with the biased distribution of the error in many scanning devices. TOF scanner usually have very good <b>x,y</b> accuracy but suffer of great depth errors.");
   case FP_CREASE_CUT:                 return tr("Cut the mesh along crease edges, duplicating the vertices as necessary. Crease edges are defined according to the variation of normal of the adjacent faces");
-  case FP_FACE_NORMAL_NORMALIZE:      return tr("Normalize Face Normal Lenghts");
-  case FP_VERTEX_NORMAL_NORMALIZE:    return tr("Normalize Vertex Normal Lenghts");
+  case FP_FACE_NORMAL_NORMALIZE:      return tr("Normalize Face Normal Lengths");
+  case FP_VERTEX_NORMAL_NORMALIZE:    return tr("Normalize Vertex Normal Lengths");
   case FP_VERTEX_QUALITY_SMOOTHING:	  return tr("Laplacian smooth of the quality values.");
   case FP_FACE_NORMAL_SMOOTHING:      return tr("Smooth Face Normals without touching the position of the vertices.");
   case FP_UNSHARP_NORMAL:             return tr("Unsharp mask filtering of the normals, putting in more evidence normal variations");
@@ -321,7 +321,7 @@ void FilterUnsharp::initParameterSet(QAction *action, MeshDocument &md, RichPara
         case FP_DEPTH_SMOOTH:
             parlst.addParam(new RichInt     ("stepSmoothNum", (int) 3,"Smoothing steps", "The number of times that the whole algorithm (normal smoothing + vertex fitting) is iterated."));
             parlst.addParam(new RichPoint3f ("viewPoint", Point3f(0,0,0),"Viewpoint", "The position of the view point that is used to get the constraint direction."));
-			parlst.addParam(new RichAbsPerc ("delta", 1.0, 0, 1.0, "Strength", "How much smoothign is applied: 0 (no smoot) e 1 (full smoot)"));
+			parlst.addParam(new RichAbsPerc ("delta", 1.0, 0, 1.0, "Strength", "How much smoothing is applied: 0 (no smooth) e 1 (full smooth)"));
             parlst.addParam(new RichBool    ("Selected",md.mm()->cm.sfn>0,"Affect only selection","If checked the filter is performed only on the selected area"));
             break;
         case FP_DIRECTIONAL_PRESERVATION:
@@ -648,10 +648,10 @@ bool FilterUnsharp::applyFilter(QAction *filter, MeshDocument &md, RichParameter
         CMeshO &targetMesh = par.getMesh("TargetMesh")->cm;
         CMeshO &sourceMesh = m.cm;
 
-        //if the numbers of vertices dont match up
+        //if the numbers of vertices don't match up
         if(sourceMesh.vn != targetMesh.vn)
         {
-            errorMessage = "Number of vertices is not the same so you cant morph between these two meshes.";
+            errorMessage = "Number of vertices is not the same so you can't morph between these two meshes.";
             return false;
         }
 

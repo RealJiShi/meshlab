@@ -1,7 +1,7 @@
 include (../general.pri)
 #CONFIG += debug_and_release
 DESTDIR = ../distrib
-EXIF_DIR = ../external/jhead-2.95
+EXIF_DIR = ../external/jhead-3.04
 
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x000000
 
@@ -10,8 +10,8 @@ INCLUDEPATH *= . \
 	../.. \
     $$VCGDIR \
     $$EIGENDIR \
-    $$GLEWDIR/include \
 	$$EXIF_DIR
+!CONFIG(system_glew): INCLUDEPATH *= $$GLEWDIR/include
 DEPENDPATH += $$VCGDIR \
     $$VCGDIR/vcg \
     $$VCGDIR/wrap
@@ -36,7 +36,6 @@ HEADERS = ../common/interfaces.h \
 	ml_render_gui.h \
 	ml_rendering_actions.h \
 	ml_default_decorators.h \
-	ml_selection_buffers.h \
     $$VCGDIR/wrap/gui/trackball.h \
     $$VCGDIR/wrap/gui/trackmode.h \
 	$$VCGDIR/wrap/gl/trimesh.h \
@@ -61,11 +60,9 @@ SOURCES = main.cpp \
 	ml_render_gui.cpp \
 	ml_rendering_actions.cpp \
 	ml_default_decorators.cpp \
-	ml_selection_buffers.cpp \
 	$$VCGDIR/wrap/gui/trackball.cpp \
     $$VCGDIR/wrap/gui/trackmode.cpp \
 	$$VCGDIR/wrap/gui/coordinateframe.cpp \
-	#$$GLEWDIR/src/glew.c \
     glarea_setting.cpp \
 	filterthread.cpp 
 
@@ -112,21 +109,9 @@ QT += xmlpatterns
 QT += network
 QT += script
 
-
 # the following line is needed to avoid mismatch between
 # the awful min/max macros of windows and the limits max
 win32:DEFINES += NOMINMAX
-
-# the following line is to hide the hundred of warnings about the deprecated
-# old printf are all around the code
-win32-msvc:DEFINES += _CRT_SECURE_NO_DEPRECATE
-win32-msvc2005:DEFINES += _CRT_SECURE_NO_DEPRECATE
-win32-msvc2008:DEFINES += _CRT_SECURE_NO_DEPRECATE
-win32-msvc2010:DEFINES += _CRT_SECURE_NO_DEPRECATE
-win32-msvc2012:DEFINES += _CRT_SECURE_NO_DEPRECATE
-win32-msvc2013:DEFINES += _CRT_SECURE_NO_DEPRECATE
-win32-msvc2015:DEFINES += _CRT_SECURE_NO_DEPRECATE
-
 
 # Uncomment these if you want to experiment with newer gcc compilers
 # (here using the one provided with macports)
@@ -139,14 +124,9 @@ CONFIG += stl
 macx:LIBS		+= -L../external/lib/macx64 -ljhead ../common/libcommon.dylib
 macx:QMAKE_POST_LINK ="cp -P ../common/libcommon.1.dylib ../distrib/meshlab.app/Contents/MacOS; install_name_tool -change libcommon.1.dylib @executable_path/libcommon.1.dylib ../distrib/meshlab.app/Contents/MacOS/meshlab"
 
-win32-msvc:LIBS			+= -L../external/lib/win32-msvc -ljhead -L../distrib -lcommon -lopengl32 -lGLU32
-win32-msvc2005:LIBS		+= -L../external/lib/win32-msvc2005 -ljhead -L../distrib -lcommon -lopengl32 -lGLU32
-win32-msvc2008:LIBS		+= -L../external/lib/win32-msvc2008 -ljhead -L../distrib -lcommon -lopengl32 -lGLU32
-win32-msvc2010:LIBS		+= -L../external/lib/win32-msvc2010 -ljhead -L../distrib -lcommon -lopengl32 -lGLU32
-win32-msvc2012:LIBS		+= -L../external/lib/win32-msvc2012 -ljhead -L../distrib -lcommon -lopengl32 -lGLU32
-win32-msvc2013:LIBS		+= -L../external/lib/win32-msvc2013 -ljhead -L../distrib -lcommon -lopengl32 -lGLU32
-win32-msvc2015:LIBS		+= -L../external/lib/win32-msvc2015 -ljhead -L../distrib -lcommon -lopengl32 -lGLU32
-win32-g++:LIBS        	+= -L../external/lib/win32-gcc -ljhead -L../distrib -lcommon -lopengl32 -lGLU32
+
+win32-msvc:LIBS += -L../external/lib/win32-msvc -ljhead -L../distrib -lcommon -lopengl32 -lGLU32
+win32-g++:LIBS += -L../external/lib/win32-gcc -ljhead -L../distrib -lcommon -lopengl32 -lGLU32
 
 #CONFIG(release,debug | release) {
 #	win32-msvc2005:release:LIBS     += -L../common/release -lcommon
@@ -154,8 +134,13 @@ win32-g++:LIBS        	+= -L../external/lib/win32-gcc -ljhead -L../distrib -lcom
 #	win32-g++:release:LIBS 			+= -L../common/release -lcommon
 #}
 
-linux:LIBS += -L$$PWD/../external/lib/linux -ljhead -L../distrib -lcommon -lGLU
+linux:LIBS += -L$$PWD/../external/lib/linux-g++ -ljhead -L../distrib -lcommon -lGLU
 linux:QMAKE_RPATHDIR += ../distrib
+
+!CONFIG(system_glew) {
+	INCLUDEPATH *= $$GLEWDIR/include
+}
+CONFIG(system_glew): LIBS += -lGLEW
 
 # uncomment in your local copy only in emergency cases.
 # We should never be too permissive

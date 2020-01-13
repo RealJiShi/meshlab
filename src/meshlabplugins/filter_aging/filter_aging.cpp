@@ -105,7 +105,7 @@ void GeometryAgingPlugin::initParameterSet(QAction *action, MeshModel &m, RichPa
                 "area affected by the erosion process."));
         params.addParam(new RichAbsPerc("QualityThreshold", qRange.first+(qRange.second-qRange.first)*0.66,
                 qRange.first, qRange.second, "Min quality threshold",
-                "Represents the minimum quality value two vertexes must have <br>"
+                "Represents the minimum quality value two vertices must have <br>"
                 "to consider the edge they are sharing."));
         params.addParam(new RichAbsPerc("EdgeLenThreshold", m.cm.bbox.Diag()*0.02, 0,m.cm.bbox.Diag()*0.5,
                 "Edge len threshold",
@@ -125,14 +125,14 @@ void GeometryAgingPlugin::initParameterSet(QAction *action, MeshModel &m, RichPa
                 "considered as 0."));
         params.addParam(new RichFloat("DisplacementSteps", 10, "Displacement steps",
                 "The whole displacement process is performed as a sequence of small <br>"
-                "offsets applyed on each vertex. This parameter represents the number <br>"
-                "of steps into which the displacement process will be splitted. <br>"
+                "offsets applied on each vertex. This parameter represents the number <br>"
+                "of steps into which the displacement process will be split. <br>"
                 "Useful to avoid the introduction of self intersections. <br>"
                 "Bigger number means better accuracy."));
         params.addParam(new RichBool("Selected", m.cm.sfn>0, "Affect only selected faces",
                 "The aging procedure will be applied to the selected faces only."));
-        params.addParam(new RichBool("StoreDisplacement", false, "Store erosion informations",
-                "Select this option if you want to store the erosion informations <br>"
+        params.addParam(new RichBool("StoreDisplacement", false, "Store erosion information",
+                "Select this option if you want to store the erosion information <br>"
                 "over the mesh. A new attribute will be added to each vertex <br>"
                 "to contain the displacement offset applied to that vertex."));
 }
@@ -197,7 +197,7 @@ bool GeometryAgingPlugin::applyFilter(QAction *filter, MeshDocument &md, RichPar
             // refine needed edges
             refineMesh(m.cm, ep, selected, cb);
 
-            // if requested, add erosion attribute to vertexes and initialize it
+            // if requested, add erosion attribute to vertices and initialize it
             if(storeDispl) {
                 CMeshO::PerVertexAttributeHandle<Point3m> vah = tri::Allocator<CMeshO>::GetPerVertexAttribute<Point3m>(m.cm, "Erosion");
                 for(CMeshO::VertexIterator vi=m.cm.vert.begin(); vi!=m.cm.vert.end(); vi++)
@@ -205,21 +205,21 @@ bool GeometryAgingPlugin::applyFilter(QAction *filter, MeshDocument &md, RichPar
             }
             CMeshO::PerVertexAttributeHandle<Point3m> vah = vcg::tri::Allocator<CMeshO>::GetPerVertexAttribute<Point3m>(m.cm, "Erosion");
 
-            // vertexes along selection border will not be displaced
+            // vertices along selection border will not be displaced
             if(selected) tri::UpdateSelection<CMeshO>::VertexFromFaceStrict(m.cm);
 
-            // clear vertexes V bit (will be used to mark the vertexes as displaced)
+            // clear vertices V bit (will be used to mark the vertices as displaced)
             tri::UpdateFlags<CMeshO>::VertexClearV(m.cm);
 
-            // displace vertexes
+            // displace vertices
             for(int i=0; i<dispSteps; i++) {
                 GridStaticPtr<CFaceO, CMeshO::ScalarType> gM;
                 gM.Set(m.cm.face.begin(), m.cm.face.end());
 
                 if(cb) (*cb)( (i+1)*100/dispSteps, "Aging...");
 
-                // blend toghether face normals and recompute vertex normal from these normals
-                // to get smoother offest directions
+                // blend together face normals and recompute vertex normal from these normals
+                // to get smoother offset directions
                 tri::Smooth<CMeshO>::FaceNormalLaplacianFF(m.cm, 3);
                 tri::UpdateNormal<CMeshO>::PerVertexFromCurrentFaceNormal(m.cm);
                 tri::UpdateNormal<CMeshO>::NormalizePerVertex(m.cm);
@@ -252,7 +252,7 @@ bool GeometryAgingPlugin::applyFilter(QAction *filter, MeshDocument &md, RichPar
                             }
                     }
                 }
-                // clear vertexes V bit again
+                // clear vertices V bit again
                 tri::UpdateFlags<CMeshO>::VertexClearV(m.cm);
             }
 
@@ -384,7 +384,7 @@ void GeometryAgingPlugin::smoothPeaks(CMeshO &m, bool selected, bool updateErosi
 
     vcg::tri::UpdateNormal<CMeshO>::PerVertexNormalizedPerFace(m);
 
-    // clear vertexes V bit again
+    // clear vertices V bit again
     tri::UpdateFlags<CMeshO>::VertexClearV(m);
 }
 

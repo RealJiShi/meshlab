@@ -99,7 +99,7 @@ class RenderArea : public QGLWidget
 		QImage image;		// Background texture
 		unsigned textNum;	// Number of tab (--> index in 'textures' vector)
 		QString fileName;	// Name of the texture
-		MeshModel *model;	// Ref to the model (for upate)
+		MeshModel *model;	// Ref to the model (for update)
 
 		Mode mode, oldMode;			// Action type
 		EditMode editMode;
@@ -117,7 +117,7 @@ class RenderArea : public QGLWidget
 		int panX, panY, tpanX, tpanY, oldPX, oldPY, posVX, posVY;	// Temp for axis
 		int maxX, maxY, minX, minY;	// For texCoord out of border
 
-		int selBit, selVertBit;		// User bit: idicates if a face/vertex is selected for editing
+		int selBit, selVertBit;		// User bit: indicates if a face/vertex is selected for editing
 		bool selected, selectedV;	// Indicates if the are some selected faces
 
 		QPointF origin;		// Origin for rotate editing
@@ -126,11 +126,11 @@ class RenderArea : public QGLWidget
 
 		QPoint start, end;	// Selection area
 		QRect area;			// Dragged rectangle
-		QRectF areaUV;		// Area of selected vertexes
+		QRectF areaUV;		// Area of selected vertices
 
 		// Info for interactive editing
 		vector<QRect> selRect;	// Vector of buttons area
-		QRect vertRect;			// Rectangle for vertexes
+		QRect vertRect;			// Rectangle for vertices
 		QRect selection;		// Selection area
 		QPoint selStart, selEnd;
 		int posX, posY, rectX, rectY, oldSRX, oldSRY;	// Stored value

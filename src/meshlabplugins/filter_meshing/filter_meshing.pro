@@ -8,3 +8,4 @@ SOURCES       += meshfilter.cpp \
 
 TARGET        = filter_meshing
 
+win32-msvc:QMAKE_CXXFLAGS = /bigobj

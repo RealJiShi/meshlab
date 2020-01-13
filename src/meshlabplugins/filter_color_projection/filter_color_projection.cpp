@@ -134,7 +134,7 @@ void FilterColorProjectionPlugin::initParameterSet(QAction *action, MeshDocument
                 "threshold value for depth buffer projection (shadow buffer)"));
             parlst.addParam(new RichBool ("onselection",
                 false,
-                "Only on selecton",
+                "Only on selection",
                 "If true, projection is only done for selected vertices"));
             parlst.addParam(new RichBool ("useangle",
                 true,
@@ -256,7 +256,10 @@ bool FilterColorProjectionPlugin::applyFilter(QAction *filter, MeshDocument &md,
                 // init rendermanager
                 rendermanager = new RenderHelper();
                 if( rendermanager->initializeGL(cb) != 0 )
+                {
+                    delete rendermanager;
                     return false;
+                }
                 Log("init GL");
                 //if( rendermanager->initializeMeshBuffers(model, cb) != 0 )
                 //    return false;

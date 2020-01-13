@@ -156,7 +156,7 @@ QString SelectionFilterPlugin::filterInfo(FilterIDType filterId) const
     case FP_SELECT_CONNECTED:           return tr("Expand the current face selection so that it includes all the faces in the connected components where there is at least a selected face.");
 	case FP_SELECT_NONE :               return tr("Clear the current set of selected faces/vertices.");
 	case FP_SELECT_ALL :                return tr("Select all the faces/vertices of the current mesh.");
-	case FP_SELECT_DELETE_VERT :        return tr("Delete the current set of selected vertices; faces that share one of the deleted vertexes are deleted too.");
+	case FP_SELECT_DELETE_VERT :        return tr("Delete the current set of selected vertices; faces that share one of the deleted vertices are deleted too.");
 	case FP_SELECT_DELETE_ALL_FACE:     return tr("Delete ALL faces, turning the mesh into a pointcloud. May be applied also to all visible layers.");
 	case FP_SELECT_DELETE_FACE :        return tr("Delete the current set of selected faces, vertices that remains unreferenced are not deleted.");
 	case FP_SELECT_DELETE_FACEVERT :    return tr("Delete the current set of selected faces and all the vertices surrounded by that faces.");
@@ -165,10 +165,10 @@ QString SelectionFilterPlugin::filterInfo(FilterIDType filterId) const
 	case CP_SELFINTERSECT_SELECT :      return tr("Select only self intersecting faces.");
 	case FP_SELECT_FACE_FROM_VERT :     return tr("Select faces from selected vertices.");
 	case FP_SELECT_VERT_FROM_FACE :     return tr("Select vertices from selected faces.");
-	case FP_SELECT_FACES_BY_EDGE :      return tr("Select all triangles having an edge with lenght greater or equal than a given threshold.");     
+	case FP_SELECT_FACES_BY_EDGE :      return tr("Select all triangles having an edge with length greater or equal than a given threshold.");
 	case FP_SELECT_BORDER :             return tr("Select vertices and faces on the boundary.");
-	case FP_SELECT_BY_VERT_QUALITY :    return tr("Select all the faces/vertexes within the specified vertex quality range.");
-	case FP_SELECT_BY_FACE_QUALITY :    return tr("Select all the faces/vertexes with within the specified face quality range.");
+	case FP_SELECT_BY_VERT_QUALITY :    return tr("Select all the faces/vertices within the specified vertex quality range.");
+	case FP_SELECT_BY_FACE_QUALITY :    return tr("Select all the faces/vertices with within the specified face quality range.");
 	case FP_SELECT_BY_COLOR :           return tr("Select part of the mesh based on its color.");
 	case CP_SELECT_TEXBORDER :          return tr("Colorize only border edges.");
 	case CP_SELECT_NON_MANIFOLD_FACE:   return tr("Select the faces and the vertices incident on non manifold edges (e.g. edges where more than two faces are incident); note that this function select the components that are related to non manifold edges. The case of non manifold vertices is specifically managed by the pertinent filter.");
@@ -317,6 +317,7 @@ switch(ID(action))
 			if (!(*vi).IsD() && (*vi).IsS())
 				tri::Allocator<CMeshO>::DeleteVertex(m.cm, *vi);
 		m.clearDataMask(MeshModel::MM_FACEFACETOPO);
+		m.clearDataMask(MeshModel::MM_VERTFACETOPO);
 		m.UpdateBoxAndNormals();
 		Log("Deleted %i vertices, %i faces.", vvn - m.cm.vn, ffn - m.cm.fn);
 	} break;
@@ -326,13 +327,14 @@ switch(ID(action))
 		if (par.getBool("allLayers"))
 		{
 			MeshModel   *ml = NULL;
-			while (ml = md.nextVisibleMesh(ml))
+			while ((ml = md.nextVisibleMesh(ml)))
 			{
 				int ffn = ml->cm.fn;
 				for (fi = ml->cm.face.begin(); fi != ml->cm.face.end(); ++fi)
 				if (!(*fi).IsD())
 					tri::Allocator<CMeshO>::DeleteFace(ml->cm, *fi);
 				ml->clearDataMask(MeshModel::MM_FACEFACETOPO);
+				ml->clearDataMask(MeshModel::MM_VERTFACETOPO);
 				ml->UpdateBoxAndNormals();
 				Log("Layer %i: deleted all %i faces.", ml->id(), ffn - ml->cm.fn);
 			}
@@ -344,6 +346,7 @@ switch(ID(action))
 			if (!(*fi).IsD())
 				tri::Allocator<CMeshO>::DeleteFace(m.cm, *fi);
 			m.clearDataMask(MeshModel::MM_FACEFACETOPO);
+			m.clearDataMask(MeshModel::MM_VERTFACETOPO);
 			m.UpdateBoxAndNormals();
 			Log("Deleted all %i faces.", ffn - m.cm.fn);
 		}
@@ -357,6 +360,7 @@ switch(ID(action))
 			if (!(*fi).IsD() && (*fi).IsS())
 				tri::Allocator<CMeshO>::DeleteFace(m.cm, *fi);
 		m.clearDataMask(MeshModel::MM_FACEFACETOPO);
+		m.clearDataMask(MeshModel::MM_VERTFACETOPO);
 		m.UpdateBoxAndNormals();
 		Log("Deleted %i faces.", ffn - m.cm.fn);
 	} break;
@@ -375,6 +379,7 @@ switch(ID(action))
 			if (!(*vi).IsD() && (*vi).IsS())
 				tri::Allocator<CMeshO>::DeleteVertex(m.cm, *vi);
 		m.clearDataMask(MeshModel::MM_FACEFACETOPO);
+		m.clearDataMask(MeshModel::MM_VERTFACETOPO);
 		m.UpdateBoxAndNormals();
 		Log("Deleted %i faces, %i vertices.", ffn - m.cm.fn, vvn - m.cm.vn);
 	} break;

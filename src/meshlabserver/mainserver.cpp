@@ -31,9 +31,9 @@
 #include <common/mlexception.h>
 #include <common/filterparameter.h>
 #include <wrap/qt/qt_thread_safe_memory_info.h>
-#include "../meshlab/mainwindow.h"
 #include <clocale>
 
+#include <QGLFormat>
 #include <QFileInfo>
 
 
@@ -133,7 +133,7 @@ public:
         // Opening files in a transparent form (IO plugins contribution is hidden to user)
         QStringList filters;
 
-        // HashTable storing all supported formats togheter with
+        // HashTable storing all supported formats together with
         // the (1-based) index  of first plugin which is able to open it
         QHash<QString, MeshIOInterface*> allKnownFormats;
 
@@ -145,7 +145,7 @@ public:
         QDir::setCurrent(fi.absolutePath());
 
         QString extension = fi.suffix();
-        qDebug("Opening a file with extention %s", qUtf8Printable(extension));
+        qDebug("Opening a file with extension %s", qUtf8Printable(extension));
         // retrieving corresponding IO plugin
         MeshIOInterface* pCurrentIOPlugin = PM.allKnowInputFormats[extension.toLower()];
         if (pCurrentIOPlugin == 0)
@@ -158,7 +158,7 @@ public:
 
         RichParameterSet prePar;
         pCurrentIOPlugin->initPreOpenParameter(extension, fileName,prePar);
-		prePar.join(defaultGlobal);
+        prePar.join(defaultGlobal);
 
         if (!pCurrentIOPlugin->open(extension, fileName, mm ,mask,prePar))
         {
@@ -202,7 +202,7 @@ public:
         return true;
     }
 
-    bool exportMesh(MeshModel *mm, const int mask, const QString& fileName,FILE* fp = stdout)
+    bool exportMesh(MeshModel *mm, const int mask, const QString& fileName,bool writebinary,FILE* fp = stdout)
     {
         QFileInfo fi(fileName);
         // this change of dir is needed for subsequent textures/materials loading
@@ -225,6 +225,10 @@ public:
         // optional saving parameters (like ascii/binary encoding)
         RichParameterSet savePar;
         pCurrentIOPlugin->initSaveParameter(extension, *mm, savePar);
+        if(savePar.hasParameter("Binary")){
+            savePar.setValue("Binary",BoolValue(writebinary));
+        }
+        
         int formatmask = 0;
         int defbits = 0;
         pCurrentIOPlugin->GetExportMaskCapability(extension,formatmask,defbits);
@@ -240,9 +244,9 @@ public:
 
     bool openProject(MeshDocument& md,const QString& filename)
     {
-      QDir curDir = QDir::current();
+        QDir curDir = QDir::current();
         QFileInfo fi(filename);
-		std::map<int, MLRenderingData> tmp;
+        std::map<int, MLRenderingData> tmp;
         bool opened = MeshDocumentFromXML(md,fi.absoluteFilePath(), fi.suffix().toLower() == "mlb",tmp);
         if (!opened)
             return false;
@@ -295,7 +299,7 @@ public:
                 m->setFileName(outfilename);
                 QFileInfo of(outfilename);
                 m->setLabel(of.fileName());
-                exportMesh(m,m->dataMask(),outfilename);
+                exportMesh(m,m->dataMask(),outfilename,true);
             }
         }
 
@@ -370,7 +374,7 @@ public:
                     }
                     assert(parameterSet.paramList.size() == required.paramList.size());
                     RichParameter* parameter = parameterSet.paramList[i];
-                    //if this is a mesh paramter and the index is valid
+                    //if this is a mesh parameter and the index is valid
                     if(parameter->val->isMesh())
                     {
                         RichMesh* md = reinterpret_cast<RichMesh*>(parameter);
@@ -576,7 +580,7 @@ public:
 private:
     PluginManager PM;
     RichParameterSet defaultGlobal;
-	MLSceneGLSharedDataContext* shared;
+    MLSceneGLSharedDataContext* shared;
 };
 
 namespace commandline
@@ -586,29 +590,31 @@ namespace commandline
     const char overwrite('x');
     const char inputmeshes('i');
     const char outputmesh('o');
-	const char layer('l');
-	const char lastlayer('x');
-	const char currentlayer('c');
+    const char layer('l');
+    const char lastlayer('x');
+    const char currentlayer('c');
     const char mask('m');
     const char vertex('v');
     const char face('f');
     const char wedge('w');
-	const char mesh('m');
+    const char mesh('m');
     const char color('c');
     const char flags('f');
     const char normal('n');
     const char quality('q');
     const char radius('r');
-	const char polygon('p');
+    const char polygon('p');
     const char texture('t');
     const char log('l');
     const char dump('d');
     const char script('s');
+    const char saveparam('s');
+    const char ascii('a');
 
     void usage()
     {
-		printf("MeshLabServer version: %s\n", qUtf8Printable(MeshLabApplication::appVer()));
-		QFile docum(":/meshlabserver.txt");
+        printf("MeshLabServer version: %s\n", qUtf8Printable(MeshLabApplication::appVer()));
+        QFile docum(":/meshlabserver.txt");
         if (!docum.open(QIODevice::ReadOnly))
         {
             printf("MeshLabServer was not able to locate meshlabserver.txt file. The program will be closed\n");
@@ -619,42 +625,34 @@ namespace commandline
         docum.close();
     }
 
-	QString filePath()
-	{
-		QString filecharcont("[a-z]|[A-Z]|\\\\|/|\\d|-|_|\\.|\\:");
-		QString filechars("(" + filecharcont + ")+");
-		QString filecharswithspace("(" + filecharcont + "|\\s)+");
-		return QString("(\"" + filecharswithspace + "\"|" + filechars + ")");
-	}
-
     QString optionValueExpression(const char cmdlineopt)
     {
-        return QString ("-" + QString(cmdlineopt) + "\\s+" + filePath());
+        //Validate an option followed by spaces and a filepath
+        return QString ("-" + QString(cmdlineopt) + "\\s+(.+)");
     }
 
     QString outputmeshExpression()
     {
-		QString options("(" + QString(vertex) + "|" + QString(face) + "|" + QString(wedge) + "|" + QString(mesh) + ")(" + QString(color) + "|" + QString(quality) + "|" + QString(flags) + "|" + QString(normal) + "|" + QString(radius) + "|" + QString(texture) + "|" + QString(polygon) + ")");
+		QString options("(" + QString(vertex) + "|" + QString(face) + "|" + QString(wedge) + "|" + QString(mesh) + "|" +QString(saveparam) + ")(" + QString(color) + "|" + QString(quality) + "|" + QString(flags) + "|" + QString(normal) + "|" + QString(radius) + "|" + QString(texture) + "|" + QString(polygon) + "|" + QString(ascii) + ")");
 		QString optionslist(options + "(\\s+" + options + ")*");	
 		QString savingmask("-" + QString(mask) + "\\s+" + optionslist);
 		QString layernumber("\\d+");
 		QString layertosave("-" + QString(layer) + "\\s+(" + layernumber + "|" + currentlayer + "|" + lastlayer + ")");
-        return optionValueExpression(outputmesh) + "(\\s+(" + savingmask + "|" + layertosave + "\\s+" + savingmask + "|" + layertosave + "))*";
+		return optionValueExpression(outputmesh) + "(\\s+(" + savingmask + "|" + layertosave + "\\s+" + savingmask + "|" + layertosave + "))*";
     }
 
     bool validateCommandLine(const QString& str)
     {
         QString logstring("(" + optionValueExpression(log) + "\\s+" +  optionValueExpression(dump) + "|" + optionValueExpression(dump) + "\\s+" +  optionValueExpression(log) + "|" +  optionValueExpression(dump) + "|" + optionValueExpression(log) + ")");
-        //QString remainstring("(" + optionValueExpression(inproject) + "|" + optionValueExpression(inputmeshes,true) + ")" + "(\\s+" + optionValueExpression(inproject) + "|\\s+" + optionValueExpression(inputmeshes,true) + ")*(\\s+" + optionValueExpression(outproject) + "|\\s+" + optionValueExpression(script) + "|\\s+" + outputmeshExpression() + ")*");
         QString arg("(" + optionValueExpression(inproject) + "|" + optionValueExpression(inputmeshes) + "|" + optionValueExpression(outproject) + "(\\s+-" + overwrite + ")?" + "|" + optionValueExpression(script) + "|" + outputmeshExpression() + ")");
         QString args("(" + arg + ")(\\s+" + arg + ")*");
         QString completecommandline("(" + logstring + "|" + logstring + "\\s+" + args + "|" + args + ")");
         QRegExp completecommandlineexp(completecommandline);
-		//completecommandlineexp.setMinimal(true);
+        //completecommandlineexp.setMinimal(true);
 
-		bool valid = completecommandlineexp.isValid();
-		if (!valid)
-			return false;
+        bool valid = completecommandlineexp.isValid();
+        if (!valid)
+            return false;
         completecommandlineexp.indexIn(str);
         QString rr = completecommandlineexp.cap();
         return (completecommandlineexp.matchedLength() == str.size());
@@ -664,19 +662,24 @@ namespace commandline
 
 struct OutFileMesh
 {
+    OutFileMesh() : writebinary(true) {}
     QString filename;
     int mask;
-
+    bool writebinary;
 	/*WARNING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-	/*we need these two constant values because when we parse the command line we don't know yet how many layers will have the current document and which will be the current one. Opening a project and/or importing a file happens after the parsing of the commandline is completed*/
+	/* We need these two constant values because when we parse the command line we don't know 
+   * yet how many layers will have the current document and which will be the current one. 
+   * Opening a project and/or importing a file happens after the parsing of the commandline 
+   * is completed */
 	static const int lastlayerconst = -2;
 	static const int currentlayerconst = -1;
-	/**********************************************************************************************************************************************************************************************************************/
+	/******************************************************************************************/
 
-	//possible values can be:
+	// Possible values can be:
 	//	- lastlayerconst #the last layer of a document, DEFAULT value
 	//	- currentlayerconst #the current layer of a document, sometimes it's different from the last layer of a document
-	//	- a number between [0,inf) #identifying the correspondent layer position  WARNING!!!!! Please note that the layer position is DIFFERENT from the layer id
+	//	- a number between [0,inf) #identifying the correspondent layer position  
+  // WARNING!!!!! Please note that the layer position is DIFFERENT from the layer id
 	int layerposition;
 };
 
@@ -691,13 +694,13 @@ int main(int argc, char *argv[])
     FILE* logfp = stdout;
     FILE* dumpfp = NULL;
     MeshLabApplication app(argc, argv);
-	QStringList st = app.arguments();
-	std::setlocale(LC_ALL, "C");
-	QLocale::setDefault(QLocale::C);
+    QStringList st = app.arguments();
+    std::setlocale(LC_ALL, "C");
+    QLocale::setDefault(QLocale::C);
     if(argc == 1)
     {
         commandline::usage();
-		//system("pause");
+        //system("pause");
         exit(-1);
     }
     QStringList scriptfiles;
@@ -705,25 +708,25 @@ int main(int argc, char *argv[])
     QList<OutProject> outprojectfiles;
 
     QString cmdline;
-	for (int ii = 1; ii < argc; ++ii)
-	{
-		QString argum(argv[ii]);
-		argum = argum.trimmed();
-		if (argum.contains(' '))
-			argum = "\"" + argum + "\"";
-		cmdline = cmdline + argum + " ";
-	}
+    for (int ii = 1; ii < argc; ++ii)
+    {
+        QString argum(argv[ii]);
+        argum = argum.trimmed();
+        if (argum.contains(' '))
+            argum = "\"" + argum + "\"";
+        cmdline = cmdline + argum + " ";
+    }
     if (!commandline::validateCommandLine(cmdline.trimmed()))
     {
         printf("CommandLine Syntax Error: please refer to the following documentation for a complete list of the MeshLabServer parameters.\n");
         commandline::usage();
-		//system("pause");
+        //system("pause");
         exit(-1);
     }
 
 	QSettings settings(MeshLabApplication::organization(),MeshLabApplication::appArchitecturalName(MeshLabApplication::HW_64BIT));
 
-	QVariant xmlgpupar = settings.value(MainWindowSetting::maximumDedicatedGPUMem());
+	QVariant xmlgpupar = settings.value("MeshLab::System::maxGPUMemDedicatedToGeometry");
 
 	QDomDocument doc;
 	doc.setContent(xmlgpupar.toString(), false);
@@ -733,6 +736,10 @@ int main(int argc, char *argv[])
 
 	std::ptrdiff_t maxgpumem = (std::ptrdiff_t) gpumemmb * (float)(1024 * 1024);
 	vcg::QtThreadSafeMemoryInfo gpumeminfo(maxgpumem);
+
+    QGLFormat fmt = QGLFormat::defaultFormat();
+    fmt.setAlphaBufferSize(8);
+    QGLFormat::setDefaultFormat(fmt);
 
 	MeshDocument meshDocument;
 
@@ -750,7 +757,7 @@ int main(int argc, char *argv[])
 	MeshLabServer server(&shared);
     server.loadPlugins();
 
-    
+    bool writebinary = true; 
     int i = 1;
     while(i < argc)
     {
@@ -917,6 +924,19 @@ int main(int argc, char *argv[])
                                 break;
                             }
 						
+                        case commandline::saveparam :
+                             {
+                                switch( argv[i][1])
+                                {
+                                    case commandline::ascii:
+                                        {
+                                            writebinary = false;
+                                            i++;
+                                            break;
+                                         }
+                                }
+                                break;
+                             }
 						case commandline::mesh :
 							{
 								switch (argv[i][1])
@@ -933,6 +953,7 @@ int main(int argc, char *argv[])
                 else
                     ++i;
                 outfl.mask = mask;
+                outfl.writebinary = writebinary;
                 outmeshlist << outfl;
                 break;
             }
@@ -1030,7 +1051,7 @@ int main(int argc, char *argv[])
 			{
 				MeshModel* meshmod = meshDocument.meshList[layertobesaved];
 				if (meshmod != NULL)
-					exported = server.exportMesh(meshDocument.meshList[layertobesaved], outmeshlist[ii].mask, outmeshlist[ii].filename, logfp);
+					exported = server.exportMesh(meshDocument.meshList[layertobesaved], outmeshlist[ii].mask, outmeshlist[ii].filename, outmeshlist[ii].writebinary, logfp);
 				if (exported)
 					fprintf(logfp, "Mesh %s saved as %s (%i vn %i fn)\n", qUtf8Printable(meshmod->fullName()), qUtf8Printable(outmeshlist[ii].filename), meshmod->cm.vn, meshmod->cm.fn);
 				else
@@ -1041,14 +1062,16 @@ int main(int argc, char *argv[])
 		}
 		else
 			fprintf(logfp, "Invalid layer number %i. Last layer in the current document is the number %i. Output mesh %s will not be saved\n", outmeshlist[ii].layerposition, meshDocument.meshList.size() - 1, qUtf8Printable(outmeshlist[ii].filename));
+	}//for(int ii
+
+
+	if((logfp != NULL) && (logfp != stdout))
+	{
+		fclose(logfp);
 	}
-
-
-    if((logfp != NULL) && (logfp != stdout))
-        fclose(logfp);
 
 	shared.deAllocateGPUSharedData();
 	//system("pause");
-    return 0;
-}
+	return 0;
+}//int main()
 

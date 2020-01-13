@@ -58,7 +58,7 @@ QualityMapperFilter::QualityMapperFilter()
  QString QualityMapperFilter::filterInfo(FilterIDType filterId) const
 {
   switch(filterId) {
-		case FP_QUALITY_MAPPER :  return QString("The filter maps quality levels into colors using a colorband built from a transfer function (may be loaded from an external file) and colorizes the mesh vertexes. The minimum, medium and maximum quality values can be set by user to obtain a custom quality range for mapping");
+		case FP_QUALITY_MAPPER :  return QString("The filter maps quality levels into colors using a colorband built from a transfer function (may be loaded from an external file) and colorizes the mesh vertices. The minimum, medium and maximum quality values can be set by user to obtain a custom quality range for mapping");
 		default : assert(0); 
 	}
   return QString("");
@@ -88,8 +88,8 @@ void QualityMapperFilter::initParameterSet(QAction *action,MeshModel &m, RichPar
 			{
 				_meshMinMaxQuality = tri::Stat<CMeshO>::ComputePerVertexQualityMinMax(m.cm);
 
-				parlst.addParam(new RichFloat("minQualityVal", _meshMinMaxQuality.minV, "Minimum mesh quality","The specified quality value is mapped in the <b>lower</b> end of the choosen color scale. Default value: the minumum quality value found on the mesh."  ));
-				parlst.addParam(new RichFloat("maxQualityVal", _meshMinMaxQuality.maxV, "Maximum mesh quality","The specified quality value is mapped in the <b>upper</b> end of the choosen color scale. Default value: the maximum quality value found on the mesh." ));
+				parlst.addParam(new RichFloat("minQualityVal", _meshMinMaxQuality.minV, "Minimum mesh quality","The specified quality value is mapped in the <b>lower</b> end of the chosen color scale. Default value: the minimum quality value found on the mesh."  ));
+				parlst.addParam(new RichFloat("maxQualityVal", _meshMinMaxQuality.maxV, "Maximum mesh quality","The specified quality value is mapped in the <b>upper</b> end of the chosen color scale. Default value: the maximum quality value found on the mesh." ));
 				parlst.addParam(new RichFloat("midHandlePos", 50, "Gamma biasing (0..100)", "Defines a gamma compression of the quality values, by setting the position of the middle of the color scale. Value is defined as a percentage (0..100). Default value is 50, that corresponds to a linear mapping." ));
 				parlst.addParam(new RichFloat("brightness", 1.0f, "Mesh brightness", "must be between 0 and 2. 0 represents a completely dark mesh, 1 represents a mesh colorized with original colors, 2 represents a completely bright mesh"));
 				//setting default transfer functions names
@@ -119,7 +119,7 @@ void QualityMapperFilter::initParameterSet(QAction *action,MeshModel &m, RichPar
 }
 
 // The Real Core Function doing the actual mesh processing.
-// Apply color to mesh vertexes
+// Apply color to mesh vertices
 bool QualityMapperFilter::applyFilter(QAction *filter, MeshDocument &md, RichParameterSet & par, vcg::CallBackPos *cb)
 {
     MeshModel &m=*(md.mm());

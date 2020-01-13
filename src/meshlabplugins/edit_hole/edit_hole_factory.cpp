@@ -46,7 +46,8 @@ MeshEditInterface* EditHoleFactory::getMeshEditInterface(QAction *action)
 	if(action == editHole)
 	{
 		return new EditHolePlugin();
-	} else assert(0); //should never be asked for an action that isnt here
+	} else assert(0); //should never be asked for an action that isn't here
+	return nullptr;
 }
 
 QString EditHoleFactory::getEditToolDescription(QAction *)

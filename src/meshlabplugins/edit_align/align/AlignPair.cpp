@@ -137,7 +137,7 @@ void AlignPair::Stat::HTMLDump(FILE *fp)
 This function is used to choose remove outliers after each ICP iteration.
 All the points with a distance over the given Percentile are discarded.
 It uses two parameters
-MaxPointNum an (unused) hard limit on the number of points that are choosen
+MaxPointNum an (unused) hard limit on the number of points that are chosen
 MinPointNum the minimum number of points that have to be chosen to be usable
 
 */
@@ -271,7 +271,7 @@ we have two meshes:
 - Fix the mesh that does not move and stays in the spatial indexing structure.
 - Mov the mesh we 'move' e.g. the one for which we search the transforamtion.
 
-requires normalize normals for vertexes AND faces
+requires normalize normals for vertices AND faces
 Allinea due mesh;
 Assume che:
 la uniform grid sia gia' inizializzata con la mesh fix

@@ -90,7 +90,7 @@ FilterColorProc::~FilterColorProc()
 	case CP_THRESHOLDING:              return QString("Vertex Color Thresholding");
 	case CP_CONTR_BRIGHT:              return QString("Vertex Color Brightness Contrast Gamma");
 	case CP_INVERT:                    return QString("Vertex Color Invert");
-	case CP_LEVELS:                    return QString("Vertex Color Levels Adjustement");
+	case CP_LEVELS:                    return QString("Vertex Color Levels Adjustment");
 	case CP_COLOURISATION:             return QString("Vertex Color Colourisation");
 	case CP_DESATURATION:              return QString("Vertex Color Desaturation");
 	case CP_EQUALIZE:                  return QString("Equalize Vertex Color");
@@ -142,10 +142,15 @@ FilterColorProc::~FilterColorProc()
 	case CP_DISCRETE_CURVATURE: return QString("Colorize according to various discrete curvature computed as described in:<br>"
 		"'<i>Discrete Differential-Geometry Operators for Triangulated 2-Manifolds</i>' <br>"
 		"M. Meyer, M. Desbrun, P. Schroder, A. H. Barr");
-	case CP_TRIANGLE_QUALITY: return QString("Compute a quality and colorize faces depending on triangle quality:<br>"
-		"1: minimum ratio height/edge among the edges<br>"
-		"2: ratio between radii of incenter and circumcenter<br>"
-		"3: 2*sqrt(a, b)/(a+b), a, b the eigenvalues of M^tM, M transform triangle into equilateral");
+	case CP_TRIANGLE_QUALITY: return QString("Compute a quality and colorize faces depending on triangle shape:<ol>"
+		"<li>area/max side of triangle"
+		"<li>ratio inradius/circumradius (radii of incircle and circumcircle)"
+		"<li>Mean ratio of triangle = area/(a*a + b*b + c*c)"
+		"<li>Area"
+		"<li>Texture Angle Distortion. Difference between angle in 3D space and texture space"
+		"<li>Texture Area Distortion. Difference between area in 3D space and texture space"
+		"<li>Polygonal Planarity (max distance to support plane)"
+		"<li>Polygonal Planarity (relative distance to support plane)");        
 	case CP_VERTEX_SMOOTH: return QString("Laplacian Smooth Vertex Color");
 	case CP_FACE_SMOOTH: return QString("Laplacian Smooth Face Color");
 	case CP_VERTEX_TO_FACE: return QString("Vertex to Face color transfer");
@@ -287,12 +292,12 @@ void FilterColorProc::initParameterSet(QAction *a, MeshDocument& md, RichParamet
 			QStringList metrics;
 			metrics.push_back("area/max side");
 			metrics.push_back("inradius/circumradius");
-			metrics.push_back("mean ratio");
+			metrics.push_back("Mean ratio");
 			metrics.push_back("Area");
 			metrics.push_back("Texture Angle Distortion");
 			metrics.push_back("Texture Area Distortion");
-			metrics.push_back("Planarity (abs plane dist)");
-			metrics.push_back("Planarity (relative)");
+			metrics.push_back("Polygonal planarity (max)");
+			metrics.push_back("Polygonal planarity (relative)");
 
 			par.addParam(new RichEnum("Metric", 0, metrics, tr("Metric:"), tr("Choose a metric to compute triangle quality.")));
 			break;
@@ -313,7 +318,7 @@ void FilterColorProc::initParameterSet(QAction *a, MeshDocument& md, RichParamet
 		}
 		case CP_SATURATE_QUALITY:
 		{
-			par.addParam(new RichFloat("gradientThr", 1, "Gradient Threshold", "The maximum value admitted for the quality gradient (in absolute valu)"));
+			par.addParam(new RichFloat("gradientThr", 1, "Gradient Threshold", "The maximum value admitted for the quality gradient (in absolute value)"));
 			par.addParam(new RichBool("updateColor", false, "Update ColorMap", "if true the color ramp is computed again"));
 
 			break;
@@ -330,7 +335,7 @@ void FilterColorProc::initParameterSet(QAction *a, MeshDocument& md, RichParamet
 			par.addParam(new RichFloat("minVal", minmax.first, "Min", "The value that will be mapped with the lower end of the scale (blue)"));
 			par.addParam(new RichFloat("maxVal", minmax.second, "Max", "The value that will be mapped with the upper end of the scale (red)"));
 			par.addParam(new RichDynamicFloat("perc", 0, 0, 100, "Percentile Crop [0..100]", "If not zero this value will be used for a percentile cropping of the quality values.<br> If this parameter is set to a value <i>P</i> then the two values <i>V_min,V_max</i> for which <i>P</i>% of the vertices have a quality <b>lower or greater than <i>V_min,V_max</i> are used as min/max values for clamping.<br><br> The automated percentile cropping is very useful for automatically discarding outliers."));
-			par.addParam(new RichBool("zeroSym", false, "Zero Simmetric", "If true the min max range will be enlarged to be symmertic (so that green is always Zero)"));
+			par.addParam(new RichBool("zeroSym", false, "Zero Symmetric", "If true the min max range will be enlarged to be symmetric (so that green is always Zero)"));
 			break;
 		}
 		case CP_MAP_VQUALITY_INTO_COLOR:
@@ -340,7 +345,7 @@ void FilterColorProc::initParameterSet(QAction *a, MeshDocument& md, RichParamet
 			par.addParam(new RichFloat("minVal", minmax.first, "Min", "The value that will be mapped with the lower end of the scale (blue)"));
 			par.addParam(new RichFloat("maxVal", minmax.second, "Max", "The value that will be mapped with the upper end of the scale (red)"));
 			par.addParam(new RichDynamicFloat("perc", 0, 0, 100, "Percentile Crop [0..100]", "If not zero this value will be used for a percentile cropping of the quality values.<br> If this parameter is set to a value <i>P</i> then the two values <i>V_min,V_max</i> for which <i>P</i>% of the vertices have a quality <b>lower or greater than <i>V_min,V_max</i> are used as min/max values for clamping.<br><br> The automated percentile cropping is very useful for automatically discarding outliers."));
-			par.addParam(new RichBool("zeroSym", false, "Zero Simmetric", "If true the min max range will be enlarged to be symmertic (so that green is always Zero)"));
+			par.addParam(new RichBool("zeroSym", false, "Zero Symmetric", "If true the min max range will be enlarged to be symmetric (so that green is always Zero)"));
 			break;
 		}
 		case CP_MAP_FQUALITY_INTO_COLOR:
@@ -350,7 +355,7 @@ void FilterColorProc::initParameterSet(QAction *a, MeshDocument& md, RichParamet
 			par.addParam(new RichFloat("minVal", minmax.first, "Min", "The value that will be mapped with the lower end of the scale (blue)"));
 			par.addParam(new RichFloat("maxVal", minmax.second, "Max", "The value that will be mapped with the upper end of the scale (red)"));
 			par.addParam(new RichDynamicFloat("perc", 0, 0, 100, "Percentile Crop [0..100]", "If not zero this value will be used for a percentile cropping of the quality values.<br> If this parameter is set to a value <i>P</i> then the two values <i>V_min,V_max</i> for which <i>P</i>% of the faces have a quality <b>lower or greater than <i>V_min,V_max</i> are used as min/max values for clamping.<br><br> The automated percentile cropping is very useful for automatically discarding outliers."));
-			par.addParam(new RichBool("zeroSym", false, "Zero Simmetric", "If true the min max range will be enlarged to be symmertic (so that green is always Zero)"));
+			par.addParam(new RichBool("zeroSym", false, "Zero Symmetric", "If true the min max range will be enlarged to be symmetric (so that green is always Zero)"));
 			break;
 		}
 
@@ -712,12 +717,12 @@ switch(ID(filter))
 						(*fi).Q() = vcg::QualityRadii((*fi).P(0), (*fi).P(1), (*fi).P(2));
 		} break;
 
-		case 2: { //mean ratio
+		case 2: { //Mean Ratio = area/(a*a + b*b + c*c). See vcg::QualityMeanRatio.
 					for (fi = m->cm.face.begin(); fi != m->cm.face.end(); ++fi) if (!(*fi).IsD())
 						(*fi).Q() = vcg::QualityMeanRatio((*fi).P(0), (*fi).P(1), (*fi).P(2));
 		} break;
 
-		case 3: { // AREA
+		case 3: { // Area of triangle
 					for (fi = m->cm.face.begin(); fi != m->cm.face.end(); ++fi) if (!(*fi).IsD())
 						(*fi).Q() = vcg::DoubleArea((*fi))*0.5f;
 					tri::Stat<CMeshO>::ComputePerFaceQualityMinMax(m->cm, minV, maxV);

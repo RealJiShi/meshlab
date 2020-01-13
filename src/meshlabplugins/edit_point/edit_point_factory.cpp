@@ -27,7 +27,7 @@
 PointEditFactory::PointEditFactory()
 {
         editPoint = new QAction(QIcon(":/images/select_vertex_geodesic.png"),"Select Vertex Clusters", this);
-        editPointFittingPlane = new QAction(QIcon(":/images/select_vertex_plane.png"),"Select Vertexes on a Plane", this);
+        editPointFittingPlane = new QAction(QIcon(":/images/select_vertex_plane.png"),"Select Vertices on a Plane", this);
 	
         actionList << editPoint;
         actionList << editPointFittingPlane;
@@ -51,6 +51,7 @@ MeshEditInterface* PointEditFactory::getMeshEditInterface(QAction *action)
             return new EditPointPlugin(EditPointPlugin::SELECT_FITTING_PLANE_MODE);
 
         assert(0); //should never be asked for an action that isn't here
+        return nullptr;
 }
 
 QString PointEditFactory::getEditToolDescription(QAction *)

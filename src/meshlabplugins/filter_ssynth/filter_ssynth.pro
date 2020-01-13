@@ -11,13 +11,8 @@ SOURCES += filter_ssynth.cpp \
     mytrenderer.cpp
 INCLUDEPATH += ../../external/structuresynth-1.5/ssynth
 win32-msvc:LIBS += ../../external/lib/win32-msvc/ssynth.lib
-win32-msvc2005:LIBS += ../../external/lib/win32-msvc2005/ssynth.lib
-win32-msvc2008:LIBS += ../../external/lib/win32-msvc2008/ssynth.lib
-win32-msvc2010:LIBS += ../../external/lib/win32-msvc2010/ssynth.lib
-win32-msvc2012:LIBS += ../../external/lib/win32-msvc2012/ssynth.lib
-win32-msvc2015:LIBS += ../../external/lib/win32-msvc2015/ssynth.lib
 win32-g++:LIBS += ../../external/lib/win32-gcc/libssynth.a
-linux-g++:LIBS += ../../external/lib/linux-g++/libssynth.a
+linux-g++:LIBS += -lssynth
 macx:LIBS += ../../external/lib/macx64/libssynth.a
 TARGET = filter_ssynth
 TEMPLATE = lib
